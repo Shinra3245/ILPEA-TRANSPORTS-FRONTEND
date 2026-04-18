@@ -1,0 +1,16 @@
+# Node / Dependencias
+node_modules/
+
+# Build de Vite / Vue
+dist/
+dist-ssr/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Logs y SO
+*.log
+.DS_Store
+*.suo
