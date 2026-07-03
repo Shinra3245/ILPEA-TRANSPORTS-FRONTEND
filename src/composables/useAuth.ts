@@ -10,7 +10,9 @@ interface Usuario {
   uid?: string;
   email: string;
   nombre: string;
-  rol: 'ADMIN' | 'JEFE' | 'EMPLEADO';
+  rol: 'ADMIN' | 'JEFE' | 'EMPLEADO' | 'CAMIONERO';
+  id_empleado?: string | null;
+  id_camionero?: string | null;
   permisos?: string[];
 }
 
@@ -20,6 +22,9 @@ const token = ref<string | null>(null);
 const cargando = ref(false);
 const error = ref<string | null>(null);
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const SESSION_SYNC_KEY = 'auth_last_sync_at';
+const SESSION_SYNC_GRACE_MS = 60 * 1000;
+let tokenPromise: Promise<string | null> | null = null;
 
 async function leerRespuestaSegura(respuesta: Response) {
   const contentType = respuesta.headers.get('content-type') || '';
@@ -38,9 +43,20 @@ async function leerRespuestaSegura(respuesta: Response) {
 function limpiarSesionLocal() {
   usuario.value = null;
   token.value = null;
+  tokenPromise = null;
   localStorage.removeItem('usuario');
   localStorage.removeItem('userRole');
   localStorage.removeItem('token');
+  localStorage.removeItem(SESSION_SYNC_KEY);
+}
+
+function registrarSincronizacionSesion() {
+  localStorage.setItem(SESSION_SYNC_KEY, String(Date.now()));
+}
+
+function sesionSincronizadaReciente() {
+  const raw = Number(localStorage.getItem(SESSION_SYNC_KEY));
+  return Number.isFinite(raw) && raw > 0 && (Date.now() - raw) < SESSION_SYNC_GRACE_MS;
 }
 
 async function sincronizarUsuarioConBackend(firebaseToken: string) {
@@ -67,6 +83,7 @@ async function sincronizarUsuarioConBackend(firebaseToken: string) {
   localStorage.setItem('usuario', JSON.stringify(data.usuario));
   localStorage.setItem('userRole', data.usuario.rol);
   localStorage.setItem('token', firebaseToken);
+  registrarSincronizacionSesion();
 }
 
 export function useAuth() {
@@ -76,6 +93,25 @@ export function useAuth() {
   const obtenerUsuario = () => {
     return usuario.value;
   };
+
+  function mensajeLoginAmigable(code?: string): string {
+    switch (code) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        return 'Correo o contraseña incorrectos. Verifica tus datos e intenta de nuevo.';
+      case 'auth/invalid-email':
+        return 'El formato del correo no es válido.';
+      case 'auth/user-disabled':
+        return 'Esta cuenta ha sido deshabilitada. Contacta al administrador.';
+      case 'auth/too-many-requests':
+        return 'Demasiados intentos fallidos. Espera unos minutos antes de intentarlo de nuevo.';
+      case 'auth/network-request-failed':
+        return 'Sin conexión a internet. Verifica tu red e intenta de nuevo.';
+      default:
+        return 'No se pudo iniciar sesión. Intenta de nuevo o contacta al administrador.';
+    }
+  }
 
   /**
    * Login real con Firebase Auth (email/password)
@@ -92,7 +128,7 @@ export function useAuth() {
       cargando.value = false;
       return true;
     } catch (err: any) {
-      error.value = err.message || 'Error al iniciar sesión';
+      error.value = mensajeLoginAmigable(err.code);
       limpiarSesionLocal();
       cargando.value = false;
       return false;
@@ -100,7 +136,18 @@ export function useAuth() {
   };
 
   const restaurarSesion = async () => {
+    if (usuario.value && token.value && sesionSincronizadaReciente()) {
+      return true;
+    }
+
     if (auth.currentUser) {
+      if (usuario.value && sesionSincronizadaReciente()) {
+        const firebaseToken = await auth.currentUser.getIdToken();
+        token.value = firebaseToken;
+        localStorage.setItem('token', firebaseToken);
+        return true;
+      }
+
       try {
         const firebaseToken = await auth.currentUser.getIdToken();
         await sincronizarUsuarioConBackend(firebaseToken);
@@ -118,6 +165,7 @@ export function useAuth() {
       try {
         usuario.value = JSON.parse(userFromStorage);
         token.value = tokenFromStorage;
+        registrarSincronizacionSesion();
         return true;
       } catch (err) {
         limpiarSesionLocal();
@@ -128,11 +176,23 @@ export function useAuth() {
   };
 
   const obtenerToken = async () => {
+    if (tokenPromise) {
+      return tokenPromise;
+    }
+
     if (auth.currentUser) {
-      const firebaseToken = await auth.currentUser.getIdToken();
-      token.value = firebaseToken;
-      localStorage.setItem('token', firebaseToken);
-      return firebaseToken;
+      tokenPromise = auth.currentUser
+        .getIdToken()
+        .then((firebaseToken) => {
+          token.value = firebaseToken;
+          localStorage.setItem('token', firebaseToken);
+          return firebaseToken;
+        })
+        .finally(() => {
+          tokenPromise = null;
+        });
+
+      return tokenPromise;
     }
     return token.value;
   };
@@ -146,6 +206,26 @@ export function useAuth() {
     return {
       Authorization: `Bearer ${firebaseToken}`,
     };
+  };
+
+  const recuperarContrasena = async (correo: string): Promise<{ ok: boolean; mensaje: string }> => {
+    try {
+      const respuesta = await fetch(`${API_BASE_URL}/api/auth/enviar-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: correo }),
+      });
+      const data = await respuesta.json().catch(() => ({}));
+      if (respuesta.status === 429) {
+        return { ok: false, mensaje: data.message || 'Demasiados intentos. Espera unos minutos antes de reintentar.' };
+      }
+      if (!respuesta.ok || data.success === false) {
+        return { ok: false, mensaje: data.message || 'No se pudo enviar el correo. Intenta de nuevo.' };
+      }
+      return { ok: true, mensaje: 'Enlace enviado. Revisa tu bandeja de entrada (y la carpeta de spam).' };
+    } catch {
+      return { ok: false, mensaje: 'Sin conexión. Verifica tu red e intenta de nuevo.' };
+    }
   };
 
   /**
@@ -209,15 +289,35 @@ export function useAuth() {
         'asignacion:crear',
         'asignacion:ver',
         'asignacion:cancelar',
+        'abordajes:registrar',
+        'abordajes:ver',
         'chat:enviar',
         'insights:ver',
         'dashboard:admin',
         'dashboard:jefe',
         'dashboard:empleado',
+        'dashboard:camionero',
         'usuarios:ver',
         'usuarios:crear',
         'usuarios:actualizar',
         'usuarios:eliminar',
+        'admins:ver',
+        'admins:crear',
+        'admins:actualizar',
+        'admins:eliminar',
+        'jefes:ver',
+        'jefes:crear',
+        'jefes:actualizar',
+        'jefes:eliminar',
+        'empleados:ver',
+        'empleados:crear',
+        'empleados:actualizar',
+        'empleados:eliminar',
+        'camioneros:ver',
+        'camioneros:crear',
+        'camioneros:actualizar',
+        'camioneros:eliminar',
+        'camioneros:asignar_unidad_turno',
       ],
       JEFE: [
         'rutas:ver',
@@ -225,12 +325,15 @@ export function useAuth() {
         'asignacion:crear',
         'asignacion:ver',
         'asignacion:cancelar',
+        'abordajes:registrar',
+        'abordajes:ver',
         'chat:enviar',
         'insights:ver',
         'dashboard:jefe',
         'dashboard:empleado',
       ],
-      EMPLEADO: ['rutas:ver', 'asignacion:ver', 'asignacion:cancelar', 'dashboard:empleado'],
+      EMPLEADO: ['rutas:ver', 'asignacion:ver', 'dashboard:empleado'],
+      CAMIONERO: ['rutas:ver', 'abordajes:registrar', 'abordajes:ver', 'dashboard:camionero'],
     };
 
     const permisos = permisosPorRol[usuario.value.rol] || [];
@@ -257,6 +360,7 @@ export function useAuth() {
     cargando: computed(() => cargando.value),
     error: computed(() => error.value),
     login,
+    recuperarContrasena,
     logout,
     restaurarSesion,
     obtenerToken,

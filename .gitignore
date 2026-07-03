@@ -8,7 +8,8 @@ dist-ssr/
 # Variables de entorno
 .env
 .env.local
-.env.*.local
+.env.production
+.env.*
 
 # Logs y SO
 *.log

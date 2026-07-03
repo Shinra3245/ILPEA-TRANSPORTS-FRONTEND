@@ -1,12 +1,20 @@
 <template>
   <div class="chart-container">
-    <h3>📈 Ocupación Máxima por Ruta</h3>
-    <Line :data="chartData" :options="chartOptions" />
+    <h3 class="title-with-icon">
+      <AppIcon name="trending-up" :size="20" />
+      <span>Ocupación máxima por ruta</span>
+    </h3>
+    <div class="chart-scroll">
+      <div class="chart-canvas-wrapper" :style="{ minWidth: chartMinWidth }">
+        <Line :data="chartData" :options="chartOptions" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import AppIcon from './ui/AppIcon.vue';
 import { Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -46,6 +54,10 @@ interface Props {
 
 const props = defineProps<Props>();
 
+// 50px por ruta asegura espacio suficiente para el punto + etiqueta sin solaparse,
+// sin importar si el contenedor (card de 3 columnas en escritorio o pantalla móvil) es angosto.
+const chartMinWidth = computed(() => `${Math.max(props.rutas.length * 50, 480)}px`);
+
 const chartData = computed(() => ({
   labels: props.rutas.map(r => `Ruta ${r.ruta}`),
   datasets: [
@@ -67,38 +79,66 @@ const chartData = computed(() => ({
   ]
 }));
 
-const chartOptions = {
+const etiquetaAbajo = (ctx: { dataset: { data: unknown[] }; dataIndex: number }) => {
+  const value = Number(ctx.dataset.data[ctx.dataIndex]);
+  return value <= 10;
+};
+
+const chartOptions = computed(() => ({
   responsive: true,
-  maintainAspectRatio: true,
+  maintainAspectRatio: false,
+  layout: {
+    padding: {
+      top: 8,
+      left: 8,
+      right: 8
+    }
+  },
   plugins: {
     legend: {
       display: true,
       position: 'top' as const,
       labels: {
-        font: { size: 12 }
+        font: { size: 12 },
+        padding: 16,
+        boxWidth: 12
       }
     },
     title: {
       display: false
     },
     datalabels: {
-      anchor: 'end' as const,
-      align: 'top' as const,
+      anchor: (ctx: { dataset: { data: unknown[] }; dataIndex: number }) =>
+        etiquetaAbajo(ctx) ? ('start' as const) : ('end' as const),
+      align: (ctx: { dataset: { data: unknown[] }; dataIndex: number }) =>
+        etiquetaAbajo(ctx) ? ('bottom' as const) : ('top' as const),
+      offset: (ctx: { dataset: { data: unknown[] }; dataIndex: number }) =>
+        etiquetaAbajo(ctx) ? 10 : 6,
       color: '#0f172a',
-      font: { weight: 'bold' as const, size: 12 },
+      font: { weight: 'bold' as const, size: 11 },
       formatter: (value: number) => `${value.toFixed(1)}%`
     }
   },
   scales: {
+    x: {
+      ticks: {
+        autoSkip: false,
+        maxRotation: 0,
+        minRotation: 0,
+        padding: 4
+      }
+    },
     y: {
       beginAtZero: true,
       max: 100,
+      grace: '5%',
       ticks: {
+        padding: 8,
         callback: (value: number | string) => `${value}%`
       }
     }
   }
-};
+}));
 </script>
 
 <style scoped>
@@ -114,5 +154,21 @@ const chartOptions = {
   margin-top: 0;
   color: #1e293b;
   font-size: 1.1rem;
+}
+
+.chart-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chart-canvas-wrapper {
+  position: relative;
+  height: 320px;
+}
+
+@media (max-width: 768px) {
+  .chart-canvas-wrapper {
+    height: 260px;
+  }
 }
 </style>

@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { useDialog } from '../composables/useDialog';
 
 interface ChartImageResult {
   dataUrl: string;
@@ -98,7 +99,7 @@ export async function exportToPDF(elementId: string, fileName: string = 'documen
     pdf.save(`${fileName}.pdf`);
   } catch (error) {
     console.error('Error al exportar PDF:', error);
-    alert('Error al exportar el gráfico a PDF. Intenta de nuevo.');
+    useDialog().dialogAlert('Error al exportar el gráfico a PDF. Intenta de nuevo.', { title: 'Error' });
   }
 }
 
@@ -134,6 +135,6 @@ export async function exportMultipleToPDF(elementIds: string[], fileName: string
     pdf.save(`${fileName}.pdf`);
   } catch (error) {
     console.error('Error al exportar múltiples gráficos a PDF:', error);
-    alert('Error al exportar los gráficos. Intenta de nuevo.');
+    useDialog().dialogAlert('Error al exportar los gráficos. Intenta de nuevo.', { title: 'Error' });
   }
 }
