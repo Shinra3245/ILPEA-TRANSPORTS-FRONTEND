@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Techo / cabina superior -->
+  <rect x="4" y="8" width="40" height="14" rx="4" fill="#2d6a8f"/>
+  <!-- Ventanas superiores -->
+  <rect x="8"  y="11" width="8" height="8" rx="1.5" fill="#b3e0f7"/>
+  <rect x="20" y="11" width="8" height="8" rx="1.5" fill="#b3e0f7"/>
+  <rect x="32" y="11" width="8" height="8" rx="1.5" fill="#b3e0f7"/>
+  <!-- Cuerpo principal amarillo -->
+  <rect x="4" y="20" width="40" height="18" rx="2" fill="#f5a623"/>
+  <!-- Parabrisas frontal -->
+  <rect x="6" y="22" width="10" height="8" rx="1.5" fill="#b3e0f7"/>
+  <!-- Puerta -->
+  <rect x="34" y="22" width="7" height="10" rx="1" fill="#e08c10"/>
+  <line x1="37.5" y1="22" x2="37.5" y2="32" stroke="#c07a0e" stroke-width="1"/>
+  <!-- Franja inferior -->
+  <rect x="4" y="34" width="40" height="4" rx="1" fill="#e08c10"/>
+  <!-- Ruedas -->
+  <circle cx="13" cy="40" r="5" fill="#222"/>
+  <circle cx="13" cy="40" r="2.5" fill="#555"/>
+  <circle cx="35" cy="40" r="5" fill="#222"/>
+  <circle cx="35" cy="40" r="2.5" fill="#555"/>
+</svg>
