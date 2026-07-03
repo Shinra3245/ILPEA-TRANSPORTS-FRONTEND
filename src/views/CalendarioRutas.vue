@@ -276,8 +276,8 @@
               <h3>Rutas del {{ formatearFecha(listaDiaFecha) }}</h3>
               <p class="cal-detalle-vacio">Selecciona una ruta para ver su detalle.</p>
               <button
-                v-for="evento in listaDiaAbierta"
-                :key="evento.programacion_id"
+                v-for="(evento, i) in listaDiaAbierta"
+                :key="evento.programacion_id || i"
                 type="button"
                 class="cal-chip cal-chip--lista"
                 :class="{ 'cal-chip--cancelada': evento.cancelada, 'cal-chip--deshabilitada': evento.deshabilitada, 'cal-chip--planificada': evento.planificada }"
@@ -290,8 +290,8 @@
             <div v-if="listaDiaAbierta.length && detalle" class="cal-detalle-lista-dia">
               <h4 class="cal-detalle-subtitulo">Más rutas del día</h4>
               <button
-                v-for="evento in listaDiaAbierta"
-                :key="evento.programacion_id"
+                v-for="(evento, i) in listaDiaAbierta"
+                :key="evento.programacion_id || i"
                 type="button"
                 class="cal-chip cal-chip--lista"
                 :class="{ 'cal-chip--cancelada': evento.cancelada, 'cal-chip--deshabilitada': evento.deshabilitada, 'cal-chip--planificada': evento.planificada }"

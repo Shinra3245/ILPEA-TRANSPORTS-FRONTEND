@@ -965,7 +965,7 @@ const semanaActualStr = (): string => {
 
 const semanaNumero = (weekStr: string): number => {
   const m = /^(\d{4})-W(\d{2})$/.exec(weekStr);
-  return m ? parseInt(m[2], 10) : obtenerNumeroSemana(new Date());
+  return m ? parseInt(m[2] || '0', 10) : obtenerNumeroSemana(new Date());
 };
 
 const normalizarFechaISO = (valor: unknown): string | null => {

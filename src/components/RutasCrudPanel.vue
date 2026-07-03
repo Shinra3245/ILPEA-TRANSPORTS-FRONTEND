@@ -137,7 +137,7 @@
 
     <Teleport to="body">
       <!-- Modal: nueva ruta -->
-      <div v-if="modalModo === 'nueva'" class="crud-modal-overlay" @click.self="cerrarModal">
+      <div v-if="modalModo === 'nueva'" class="crud-modal-overlay" @click.self="() => cerrarModal()">
         <form class="crud-modal ruta-modal" @submit.prevent="guardarNuevaRuta">
           <h3>Nueva ruta</h3>
 
@@ -181,7 +181,7 @@
             <button type="submit" class="crud-btn-new" :disabled="guardando">
               {{ guardando ? 'Guardando...' : 'Crear ruta' }}
             </button>
-            <button type="button" class="crud-btn-secondary" :disabled="guardando" @click="cerrarModal">
+            <button type="button" class="crud-btn-secondary" :disabled="guardando" @click="() => cerrarModal()">
               Cancelar
             </button>
           </div>
@@ -189,7 +189,7 @@
       </div>
 
       <!-- Modal: editar turnos -->
-      <div v-if="modalModo === 'turnos' && rutaEnEdicion" class="crud-modal-overlay" @click.self="cerrarModal">
+      <div v-if="modalModo === 'turnos' && rutaEnEdicion" class="crud-modal-overlay" @click.self="() => cerrarModal()">
         <form class="crud-modal ruta-modal" @submit.prevent="guardarTurnos">
           <h3>Turnos — Ruta {{ rutaEnEdicion.ruta }}</h3>
           <p class="crud-muted modal-intro">Selecciona los turnos en los que opera esta ruta.</p>
@@ -217,7 +217,7 @@
             <button type="submit" class="crud-btn-new" :disabled="guardando">
               {{ guardando ? 'Guardando...' : 'Guardar turnos' }}
             </button>
-            <button type="button" class="crud-btn-secondary" :disabled="guardando" @click="cerrarModal">
+            <button type="button" class="crud-btn-secondary" :disabled="guardando" @click="() => cerrarModal()">
               Cancelar
             </button>
           </div>
@@ -225,7 +225,7 @@
       </div>
 
       <!-- Modal: asignar unidades -->
-      <div v-if="modalModo === 'unidades' && rutaEnEdicion" class="crud-modal-overlay" @click.self="cerrarModal">
+      <div v-if="modalModo === 'unidades' && rutaEnEdicion" class="crud-modal-overlay" @click.self="() => cerrarModal()">
         <form class="crud-modal ruta-modal" @submit.prevent="guardarUnidades">
           <h3>Unidades — Ruta {{ rutaEnEdicion.ruta }}</h3>
           <p class="crud-muted modal-intro">
@@ -277,7 +277,7 @@
             >
               {{ guardando ? 'Guardando...' : 'Guardar unidades' }}
             </button>
-            <button type="button" class="crud-btn-secondary" :disabled="guardando" @click="cerrarModal">
+            <button type="button" class="crud-btn-secondary" :disabled="guardando" @click="() => cerrarModal()">
               Cancelar
             </button>
           </div>
@@ -589,7 +589,7 @@ async function abrirAsignarUnidades(ruta: RutaRegistro) {
   rutaEnEdicion.value = ruta;
 
   const mapa = ruta.unidad_por_turno || {};
-  ruta.turnos.forEach((turnoId) => {
+  ruta.turnos?.forEach((turnoId) => {
     unidadPorTurno[turnoId] = resolverVehiculoId(mapa[turnoId]);
   });
 
@@ -747,7 +747,7 @@ async function guardarUnidades() {
 
   for (const turnoId of turnosDeRuta.value) {
     const vehId = unidadPorTurno[turnoId];
-    const conflicto = unidadOcupadaEnTurno(turnoId, vehId);
+    const conflicto = unidadOcupadaEnTurno(turnoId, vehId!);
     if (conflicto) {
       const veh = vehiculosCatalogo.value.find((v) => v.id === vehId);
       const codigo = veh?.codigo || conflicto.codigo || vehId;

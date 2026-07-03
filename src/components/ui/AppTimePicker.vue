@@ -131,8 +131,8 @@ function parse24h(val: string) {
 }
 
 function to24h(): string {
-  const h12 = HORAS[idxH.value];
-  const m = MINS[idxM.value];
+  const h12 = HORAS[idxH.value]!;
+  const m = MINS[idxM.value]!;
   const isPM = idxP.value === 1;
   let h24: number;
   if (h12 === 12) {
@@ -154,15 +154,15 @@ const valorMostrado = computed(() => {
 });
 
 function fmtH(off: number): number {
-  return HORAS[((idxH.value + off) % 12 + 12) % 12];
+  return HORAS[((idxH.value + off) % 12 + 12) % 12]!;
 }
 
 function fmtM(off: number): string {
-  return String(MINS[((idxM.value + off) % 12 + 12) % 12]).padStart(2, '0');
+  return String(MINS[((idxM.value + off) % 12 + 12) % 12]!).padStart(2, '0');
 }
 
 function fmtP(off: number): string {
-  return PERIODO[((idxP.value + off) % 2 + 2) % 2];
+  return PERIODO[((idxP.value + off) % 2 + 2) % 2]!;
 }
 
 function mover(col: 'h' | 'm' | 'p', delta: number) {

@@ -98,7 +98,7 @@ function toWeekStr(year: number, week: number): string {
 function parseWeekStr(s: string): { year: number; week: number } | null {
   const m = /^(\d{4})-W(\d{2})$/.exec(s);
   if (!m) return null;
-  return { year: parseInt(m[1], 10), week: parseInt(m[2], 10) };
+  return { year: parseInt(m[1] || '0', 10), week: parseInt(m[2] || '0', 10) };
 }
 
 function mondayOfIsoWeek(isoYear: number, isoWeek: number): Date {
