@@ -10,7 +10,7 @@
           <p>Consulta el manifiesto del día y registra el pase de lista por empleado.</p>
         </div>
         <AppInfoButton title="Control de Abordajes">
-          <p>Módulo para gestionar la <strong>asistencia diaria</strong> de empleados a sus rutas de transporte.</p>
+          <p>Módulo para gestionar las <strong>asistencia diaria</strong> de empleados a sus rutas de transporte.</p>
           <ul>
             <li><strong>Filtros:</strong> selecciona fecha, turno y ruta para cargar el manifiesto del día.</li>
             <li><strong>Manifiesto:</strong> lista de empleados asignados a esa ruta/turno con su asiento.</li>
