@@ -53,6 +53,7 @@
               type="email"
               required
               autocomplete="email"
+              placeholder=" "
               :disabled="ingresando"
             />
             <span>Correo electrónico</span>
@@ -67,6 +68,7 @@
               required
               autocomplete="current-password"
               class="input--has-eye"
+              placeholder=" "
               :disabled="ingresando"
             />
             <span>Contraseña</span>
@@ -123,6 +125,7 @@
               type="email"
               required
               autocomplete="email"
+              placeholder=" "
               :disabled="enviando || !!mensajeOkRecupera"
             />
             <span>Correo electrónico</span>
@@ -477,7 +480,8 @@ const ingresar = async () => {
 }
 
 .inputbox input:valid ~ span,
-.inputbox input:focus ~ span {
+.inputbox input:focus ~ span,
+.inputbox input:not(:placeholder-shown) ~ span {
   color: var(--ilpea-accent);
   transform: translateX(-10px) translateY(-2.25rem);
   font-size: 0.75rem;
@@ -500,7 +504,8 @@ const ingresar = async () => {
 }
 
 .inputbox input:valid ~ i,
-.inputbox input:focus ~ i {
+.inputbox input:focus ~ i,
+.inputbox input:not(:placeholder-shown) ~ i {
   height: 48px;
   background: rgba(16, 124, 65, 0.07);
   border-radius: 8px 8px 0 0;
